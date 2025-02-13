@@ -106,6 +106,7 @@ class Linear(nn.Linear, LoRALayer):
 
         self.fan_in_fan_out = fan_in_fan_out
         # Actual trainable parameters
+        print('reinstall is successed')
         if r > 0:
             self.lora_A = nn.Parameter(self.weight.new_zeros((r, in_features)))
             print(self.lora_A)
