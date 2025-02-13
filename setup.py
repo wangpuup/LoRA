@@ -11,7 +11,7 @@ setuptools.setup(
     description="PyTorch implementation of low-rank adaptation (LoRA), a parameter-efficient approach to adapt a large pre-trained deep learning model which obtains performance on-par with full fine-tuning.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/microsoft/LoRA",
+    url="https://github.com/wangpuup/LoRA",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
