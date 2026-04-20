@@ -5,10 +5,14 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="loralib",
-    version="0.1.2",
-    author="Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, Weizhu Chen",
-    author_email="edward.hu@microsoft.com",
-    description="PyTorch implementation of low-rank adaptation (LoRA), a parameter-efficient approach to adapt a large pre-trained deep learning model which obtains performance on-par with full fine-tuning.",
+    version="0.1.3",
+    author="Pu Wang",
+    author_email="pu.wang@esat.kuleuven.be",
+    description=(
+        "Extended LoRA library based on Microsoft LoRA, with additional "
+        "parameter-efficient fine-tuning backends including SSVD, SSVD-O, "
+        "DoRA, SVFT, PiSSA, and related LoRA variants."
+    ),
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/wangpuup/LoRA",

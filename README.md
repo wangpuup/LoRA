@@ -1,3 +1,69 @@
+# Extended LoRA Library: Structured SVD (SSVD)
+This repository is an extended fork of Microsoft LoRA. It adds additional parameter-efficient fine-tuning (PEFT) backends, including Structured SVD-based methods such as SSVD and SSVD-O, as well as other LoRA variants such as DoRA, SVFT, and PiSSA.
+
+The repository remains distributed under the MIT License. Please refer to the original Microsoft LoRA implementation for the base `loralib` library. The original upstream README is preserved below for reference.
+
+## Implemented backends
+
+This repository extends the original `loralib` with additional LoRA variant modules, including:
+
+- `Linear` (vanilla LoRA)
+- `SSVDLinear`
+- `SVFTLinear`
+- `DoraLinear`
+- `PiSSALinear`
+- other experimental variants as available in `loralib/layers.py`
+
+## Related papers
+
+If you use the Structured SVD-based methods in this repository, please cite:
+
+### SSVD
+Pu Wang, Shinji Watanabe, and Hugo Van hamme,  
+**SSVD: Structured SVD for Parameter-Efficient Fine-Tuning and Benchmarking under Domain Shift in ASR**  
+in *IEEE Automatic Speech Recognition and Understanding Workshop (ASRU)*, 2025.
+
+### SSVD-O
+Pu Wang, Shinji Watanabe, and Hugo Van hamme,  
+**SSVD-O: Parameter-Efficient Fine-Tuning with Structured SVD for Speech Recognition**  
+in *Proc. ICASSP 2026*.
+
+## Citation
+
+```BibTeX
+@inproceedings{wang2025ssvd,
+  author    = {Pu Wang and Shinji Watanabe and Hugo Van hamme},
+  title     = {SSVD: Structured SVD for Parameter-Efficient Fine-Tuning and Benchmarking under Domain Shift in ASR},
+  booktitle = {IEEE Automatic Speech Recognition and Understanding Workshop (ASRU)},
+  year      = {2025}
+}
+
+@inproceedings{wang2026ssvdo,
+  author    = {Pu Wang and Shinji Watanabe and Hugo Van hamme},
+  title     = {SSVD-O: Parameter-Efficient Fine-Tuning with Structured SVD for Speech Recognition},
+  booktitle = {Proc. ICASSP},
+  year      = {2026}
+}
+```
+## Installation
+
+To use the extended adapter backends in this fork:
+ ```bash
+pip install git+https://github.com/wangpuup/LoRA@ssvd
+ ```
+
+## Contact for this fork
+
+For questions related to the SSVD / SSVD-O extensions and other backends in this fork, please contact:
+
+- Pu Wang (pu.wang@esat.kuleuven.be)
+
+---
+
+## Original Microsoft LoRA README
+
+The following sections are preserved from the original Microsoft LoRA repository for reference.
+
 # LoRA: Low-Rank Adaptation of Large Language Models
 
 This repo contains the source code of the Python package `loralib` and several examples of how to integrate it with PyTorch models, such as those in Hugging Face.
@@ -75,6 +141,10 @@ There are several directories in this repo:
  pip install loralib
  # Alternatively
  # pip install git+https://github.com/microsoft/LoRA
+ ```
+ To install the extended adapter backends provided in this fork, use:
+  ```bash
+ pip install git+https://github.com/wangpuup/LoRA@ssvd
  ```
 
  2. You can choose to adapt some layers by replacing them with counterparts implemented in `loralib`. We only support `nn.Linear`, `nn.Embedding`, and `nn.Conv2d` for now. We also support a `MergedLinear` for cases where a single `nn.Linear` represents more than one layers, such as in some implementations of the attention `qkv` projection (see Additional Notes for more).

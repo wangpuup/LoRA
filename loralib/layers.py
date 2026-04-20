@@ -168,10 +168,10 @@ class SSVDLinear(nn.Linear, LoRALayer):
         **kwargs
     ):
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
-        LoRALayer.__init__(self, r=r, lora_alpha=lora_alpha, lora_dropout=0.0, merge_weights=merge_weights)
+        LoRALayer.__init__(self, r=r, lora_alpha=lora_alpha, lora_dropout=lora_dropout, merge_weights=merge_weights)
 
         self.fan_in_fan_out = fan_in_fan_out
-        self.svd_initialized = False
+        self.register_buffer("svd_initialized", torch.tensor(False, dtype=torch.bool))
         self.in_features = in_features
         self.out_features = out_features
 
@@ -219,7 +219,7 @@ class SSVDLinear(nn.Linear, LoRALayer):
         self.reset_parameters()
 
     def apply_svd(self):
-        if not self.svd_initialized:
+        if not bool(self.svd_initialized):
             if self.out_features >= self.in_features:
                 u, s, v = torch.linalg.svd(self.weight, full_matrices=False)
             else:
@@ -230,7 +230,7 @@ class SSVDLinear(nn.Linear, LoRALayer):
             self.gate.data = torch.tensor([0.], device=s.device)
             nn.init.kaiming_uniform_(self.s[None, :])
             self.s.squeeze()
-            self.svd_initialized = True
+            self.svd_initialized.fill_(True)
 
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
@@ -379,9 +379,9 @@ class SVFTLinear(nn.Linear, LoRALayer):
         **kwargs
     ):
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
-        LoRALayer.__init__(self, r=0, lora_alpha=lora_alpha, lora_dropout=lora_dropout, merge_weights=merge_weights)
+        LoRALayer.__init__(self, r=r, lora_alpha=lora_alpha, lora_dropout=lora_dropout, merge_weights=merge_weights)
         self.fan_in_fan_out = fan_in_fan_out
-        self.svd_initialized = False
+        self.register_buffer("svd_initialized", torch.tensor(False, dtype=torch.bool))
 
         self.r_svft = min(out_features, in_features)
 
@@ -417,14 +417,13 @@ class SVFTLinear(nn.Linear, LoRALayer):
     def apply_svd(self):
         """Applies SVD to the current weight matrix."""
 
-        if not self.svd_initialized: #or self.previous_weight_hash != current_weight_hash:
+        if not bool(self.svd_initialized): #or self.previous_weight_hash != current_weight_hash:
             u, s, v = torch.linalg.svd(self.weight, full_matrices=False)
-            device = s.device
 
             self.u.data = u.clone().detach().contiguous()
             self.v.data = v.clone().detach().contiguous()
             self.s_pre.data = s.clone().detach().contiguous()
-            self.svd_initialized = True
+            self.svd_initialized.fill_(True)
     
     def construct_M(self):
         # Place m_entries into correct (i, j) locations to form banded M
@@ -478,8 +477,7 @@ class PiSSALinear(nn.Linear, LoRALayer):
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
         LoRALayer.__init__(self, r=r, lora_alpha=lora_alpha, lora_dropout=lora_dropout, merge_weights=merge_weights)
         self.fan_in_fan_out = fan_in_fan_out
-        self.pissa_init = True
-        self.pissa_con = True
+        self.register_buffer("pissa_initialized", torch.tensor(False, dtype=torch.bool))
 
         if r > 0:
             self.lora_A = nn.Parameter(self.weight.new_zeros((r, in_features)), requires_grad=True)
@@ -502,7 +500,7 @@ class PiSSALinear(nn.Linear, LoRALayer):
         self._pissa_factorize()
 
     def _pissa_factorize(self):
-        if self.pissa_init:
+        if not bool(self.pissa_initialized):
             def T(w):
                 return w.transpose(0, 1) if self.fan_in_fan_out else w
 
@@ -517,7 +515,7 @@ class PiSSALinear(nn.Linear, LoRALayer):
             self.A0.data = (sqrtS.unsqueeze(1) * V_r.T)  # (r, d_in)
             self.B0.data = U_r * sqrtS.unsqueeze(0)      # (d_out, r)
 
-            self.pissa_init = False
+            self.pissa_initialized.fill_(True)
 
     def reset_parameters(self):
         nn.Linear.reset_parameters(self)
