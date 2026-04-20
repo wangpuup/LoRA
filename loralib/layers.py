@@ -153,7 +153,7 @@ class Linear(nn.Linear, LoRALayer):
             return F.linear(x, T(self.weight), bias=self.bias)
 
 
-class SSVDLinear(nn.Linear):
+class SSVDLinear(nn.Linear, LoRALayer):
     def __init__(
         self,
         in_features: int,
@@ -163,6 +163,7 @@ class SSVDLinear(nn.Linear):
         lora_dropout: float = 0.,
         fan_in_fan_out: bool = False,
         merge_weights: bool = True,
+        rotation_ratio: Optional[float] = None,
         off_diag: int = 0,
         **kwargs
     ):
@@ -175,7 +176,28 @@ class SSVDLinear(nn.Linear):
         self.out_features = out_features
 
         self.r_svft = min(out_features, in_features)
-        self.k_trainable = int(self.r_svft // lora_dropout)
+        if rotation_ratio is not None:
+            if not (0.0 < rotation_ratio <= 1.0):
+                raise ValueError(
+                    f"rotation_ratio must be in (0, 1], got {rotation_ratio}."
+                )
+            self.k_trainable = int(self.r_svft * rotation_ratio)
+            if self.k_trainable < 1:
+                raise ValueError(
+                    f"rotation_ratio={rotation_ratio} yields k_trainable=0 for "
+                    f"r_svft={self.r_svft}. Increase rotation_ratio."
+                )
+        elif r > 0:
+            self.k_trainable = r
+        else:
+            raise ValueError(
+                "SSVDLinear requires rotation_ratio or r > 0 to determine k_trainable."
+            )
+        if self.k_trainable > self.r_svft:
+            raise ValueError(
+                f"k_trainable ({self.k_trainable}) must be <= min(out_features, "
+                f"in_features) ({self.r_svft})."
+            )
 
         # Non-trainable SVD components
         if self.out_features >= self.in_features:
@@ -353,7 +375,7 @@ class SVFTLinear(nn.Linear, LoRALayer):
         lora_dropout: float = 0.,
         fan_in_fan_out: bool = False, # Set this to True if the layer to replace stores weight like (fan_in, fan_out)
         merge_weights: bool = True,
-        off_diag: int = 0,
+        off_diag: Optional[int] = None,
         **kwargs
     ):
         nn.Linear.__init__(self, in_features, out_features, **kwargs)
@@ -363,7 +385,9 @@ class SVFTLinear(nn.Linear, LoRALayer):
 
         self.r_svft = min(out_features, in_features)
 
-        self.off_diag = r
+        self.off_diag = r if off_diag is None else off_diag
+        if self.off_diag < 0:
+            raise ValueError(f"off_diag must be >= 0, got {self.off_diag}.")
 
         # === Collect banded (i, j) indices ===
         row_idx = []
